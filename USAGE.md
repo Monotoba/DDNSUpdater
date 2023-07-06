@@ -44,11 +44,11 @@ ip_file = last_ip.txt
 You can customize the values for the domain, host, API password, log file, and IP file as per your requirements.
 
 ## Requirements
-. Python 3.x
-. Requests library
-. configparser library
-. xml.etree.ElementTree library
-. xml.dom.minidom library
+- Python 3.x
+- Requests library
+- configparser library
+- xml.etree.ElementTree library
+- xml.dom.minidom library
 
 Make sure to install the dependencies using the provided requirements.txt file.
 
