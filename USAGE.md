@@ -11,14 +11,19 @@ To use this script, follow the steps below:
 2. Install the required dependencies by running the following command:
    ```bash
    pip install -r requirements.txt
+   ```
 
 3. Run the script with the desired options. Here are some examples:
 
 ..Update DDNS using command-line arguments:
+   ```Python
   python ddns_updater.py --domain example.com --host subdomain --log-file ddns.log --ip-file last_ip.txt
+   ```
 
 ..Update DDNS using a configuration file (config.ini):
+   ```Python
   python ddns_updater.py --config-file config.ini
+   ```
 
 Note: If no log file or IP file is provided, default values will be used.
 
@@ -27,13 +32,14 @@ DDNS service. The log messages will be recorded in the specified log file.
 
 ## Configuration File Format
 If you choose to use a configuration file, it should be in the INI format. Here's an example configuration file (config.ini):
-
+```Ini
 [Settings]
 domain = example.com
 host = subdomain
 api_password = 1234567890
 log_file = ddns.log
 ip_file = last_ip.txt
+```
 
 You can customize the values for the domain, host, API password, log file, and IP file as per your requirements.
 
