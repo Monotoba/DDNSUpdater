@@ -19,3 +19,7 @@ errors and reproduction steps without passwords or password-bearing URLs.
 
 The next priorities are provider verification, HTTPS/timeout/IP handling,
 state-file ordering, and duplicate-log repairs. No release is ready yet.
+
+CI covers Python 3.10/3.12 on Linux, Windows, and macOS 15 Intel. The explicit
+macOS label avoids the current ARM runner capacity delays; native ARM validation
+is not part of this baseline matrix. Review the label when GitHub retires it.
