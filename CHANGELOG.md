@@ -1,4 +1,6 @@
-# Unreleased baseline
+# Changelog
+
+## 0.1.0a1 — prepared, unreleased
 
 - Add Python 3.10+ packaging, runtime dependencies, and installed CLI entry point.
 - Repair package imports while retaining the original direct-script launch.
@@ -17,4 +19,5 @@
 - Fail before network requests when the existing log cannot be read or parsed.
 - Correct negative fractional-hour offsets and refresh local offsets per entry.
 - Cover real-logger CLI integration with mocked provider responses.
+- Prepare initial experimental-alpha metadata and release notes.
 - Live provider validation remains pending; no release has been published.

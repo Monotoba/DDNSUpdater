@@ -2,22 +2,32 @@
 
 [![Tests](https://github.com/Monotoba/DDNSUpdater/actions/workflows/tests.yml/badge.svg)](https://github.com/Monotoba/DDNSUpdater/actions/workflows/tests.yml)
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue)
-![Status](https://img.shields.io/badge/status-work%20in%20progress-orange)
+![Status](https://img.shields.io/badge/status-experimental%20alpha-orange)
 [![License](https://img.shields.io/badge/license-BSD--2--Clause-blue)](LICENSE)
 
 A small Python command-line tool intended to update a Namecheap dynamic-DNS
 record. Useful for a home server or another service whose public IP changes.
 
-**Work in progress — not ready for unattended use.** Installation, CLI settings,
+**Experimental alpha — not ready for unattended use.** Installation, CLI settings,
 configuration files, and credential-safe error messages have an offline test
 baseline. HTTPS IPv4 discovery, connect/read timeouts, provider XML verification,
 and atomic state saving are implemented. XML logging writes each message once,
 preserves corrupt logs, and reports file failures.
-No live DNS update has been validated. PyPI publication remains on hold.
+Version **0.1.0a1** is prepared for an initial GitHub prerelease; publication is
+pending. No live DNS update has been validated. PyPI publication remains on hold.
+See [RELEASE_NOTES.md](RELEASE_NOTES.md) for scope and known limitations.
 
-## Install from the checkout
+## Install the prepared alpha
 
-Requires Python 3.10+. Create and activate a virtual environment, then:
+Requires Python 3.10+. Create and activate a virtual environment. Once the
+GitHub prerelease is published, download its wheel and install it locally:
+
+```sh
+python -m pip install ./monotoba_ddnsupdater-0.1.0a1-py3-none-any.whl
+namecheap-ddns --help
+```
+
+For contributors, install from the checkout:
 
 ```sh
 git clone https://github.com/Monotoba/DDNSUpdater.git
@@ -43,7 +53,7 @@ Namecheap, send requests, or write log/IP files. Never post your password in
 issues or commit a credentials file. For file format and precedence, see
 [USAGE.md](USAGE.md).
 
-Omitting `--dry-run` runs the unfinished update flow and can change a DNS record.
+Omitting `--dry-run` sends an experimental update request and can change a DNS record.
 The flow checks provider XML and saves state only after confirmed success.
 Start with a dry run. A controlled live provider update is still needed to
 validate real-service behavior before recommending unattended use.
@@ -57,8 +67,9 @@ validate real-service behavior before recommending unattended use.
 3. **Implemented:** repair logger duplicate entries, atomic file saving,
    malformed-log handling, and fractional-hour timezone formatting.
 4. GitHub description/topics and baseline built-artifact checks are complete.
-   **Next:** prepare an experimental alpha with clear live-validation limits.
-   Stable/unattended-use claims require a controlled live provider check.
+   The initial alpha version, release notes, and package checks are prepared.
+   GitHub publication is pending. Stable/unattended-use claims require a
+   controlled live provider check.
 
 Contributors can help with mocked provider responses and cross-platform checks.
 See [CONTRIBUTING.md](CONTRIBUTING.md). Licensed under [BSD-2-Clause](LICENSE).
