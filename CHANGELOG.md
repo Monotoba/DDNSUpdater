@@ -12,4 +12,9 @@
 - Encode provider parameters and verify XML success against the requested IPv4.
 - Save IP state atomically after provider confirmation; propagate save failures.
 - Keep runtime errors sanitized even when error logging fails.
-- Logger duplicate-entry repairs and live provider validation remain pending.
+- Write XML log entries once without retaining unused file handlers.
+- Atomically save logs and preserve malformed/invalid-UTF-8 logs for diagnosis.
+- Fail before network requests when the existing log cannot be read or parsed.
+- Correct negative fractional-hour offsets and refresh local offsets per entry.
+- Cover real-logger CLI integration with mocked provider responses.
+- Live provider validation remains pending; no release has been published.

@@ -1,7 +1,8 @@
 # DDNSUpdater usage
 
 This is a work-in-progress tool. Use `--dry-run` for configuration validation
-until the update-flow blockers in [README.md](README.md) are resolved.
+before attempting a real update. Offline tests cover the update flow; live
+provider behavior has not yet been validated.
 
 ## Commands
 
@@ -55,7 +56,7 @@ configuration. Relative paths resolve from the current working directory.
   can occur after DNS has changed; rerun after correcting the file problem.
 
 The updater does not run a scheduler or daemon. Unattended scheduling should wait
-for logger repairs and live validation. Discovery uses `https://api4.ipify.org`;
+for controlled live validation. Discovery uses `https://api4.ipify.org`;
 the provider receives the exact discovered IPv4 in an encoded HTTPS GET. Both
 requests disable redirects and use 5-second connect / 15-second read timeouts.
 These are Requests timeouts, not a total wall-clock deadline. IPv6 and malformed
@@ -66,7 +67,31 @@ The state file retains the original `IP @ timestamp` format. It is replaced
 atomically only after provider confirmation; save failures propagate to exit 1.
 Its parent directory must already exist. This file is a success record, not a
 cache: each invocation sends an update. No automatic retries are performed.
-Logger duplicate-entry repairs remain pending. No live DNS update was validated.
+No live DNS update was validated.
+
+## XML logging
+
+The logger writes UTF-8 XML with one entry per successful log call. Existing
+entries are retained across runs, and each write atomically replaces the log.
+Malformed XML, an unexpected root, unsupported document types, or invalid UTF-8
+fail before the CLI sends requests. Preserve or move the damaged file for
+diagnosis, then select a new log path; the tool does not silently erase it.
+
+Runtime log-read/write failures return exit 1. Failed entries are not replayed
+on later calls. Explicit logger `exception()` and `trace()` methods retain
+diagnostic details, so callers should not pass secrets to those methods. The
+DDNS CLI uses generic error messages and does not log provider bodies or request
+exception details.
+
+Default timestamps use UTC. The CLI enables the local timezone and records its
+current numeric offset (including half-hour/quarter-hour zones). The logger
+`set_timezone()` method overrides the displayed local-zone label only; it does
+not select a different timezone or change the local offset.
+
+Use one writer per log/state path. Atomic replacement prevents partially written
+files but does not serialize overlapping runs. Logs are read and rewritten as
+one XML document and have no automatic rotation; their size grows over time.
+Parent directories must exist and permit creation/replacement of files.
 
 Only Requests is a third-party runtime dependency; argparse, configparser, and
 XML utilities are included with Python. No live update is needed to run tests.

@@ -4,7 +4,8 @@ import xml.etree.ElementTree as ET
 import xml.dom.minidom
 import traceback
 from datetime import datetime, timezone
-import re
+import tempfile
+from pathlib import Path
 
 
 class CustomLogger:
@@ -12,11 +13,15 @@ class CustomLogger:
         self.log_file = log_file
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.DEBUG)
-        self.logger.addHandler(logging.FileHandler(log_file))
+        # Fail early on an inaccessible path without keeping an unused file handle.
+        with open(log_file, "a", encoding="utf-8"):
+            pass
+        self._read_existing_log()
         self.xml_root = ET.Element("log")
         self.timestamp_format = "%Y-%m-%d %H:%M:%S %Z"
         self.system_timezone = self._get_system_timezone()
         self.use_system_timezone_flag = False
+        self._timezone_label_override = None
 
         # Define a custom logging level for EXCEPTION and TRACE
         self.EXCEPTION = 35
@@ -29,6 +34,7 @@ class CustomLogger:
 
     def set_timezone(self, timezone):
         self.system_timezone = timezone
+        self._timezone_label_override = timezone
 
     def get_timezone(self):
         return self.system_timezone
@@ -59,7 +65,7 @@ class CustomLogger:
 
     def _log(self, message, level, log_exception=False, log_trace=False):
         log_level = self._get_log_level(level)
-        log_entry = ET.SubElement(self.xml_root, log_level)
+        log_entry = ET.Element(log_level)
         timestamp = ET.SubElement(log_entry, "timestamp")
         timestamp.text = self._get_timestamp()
         log_message = ET.SubElement(log_entry, "message")
@@ -73,7 +79,12 @@ class CustomLogger:
             trace_elem = ET.SubElement(log_entry, "execution")
             trace_elem.text = trace_info
 
-        self._write_to_log_file()
+        self.xml_root.append(log_entry)
+        try:
+            self._write_to_log_file()
+        finally:
+            # Never replay a successful or failed message on the next log call.
+            self.xml_root.clear()
 
     def _get_log_level(self, level):
         if level == logging.DEBUG:
@@ -95,19 +106,23 @@ class CustomLogger:
 
     def _get_timestamp(self):
         now = datetime.now(timezone.utc)
-
         if self.use_system_timezone_flag:
-            timestamp = now.astimezone().strftime(self.timestamp_format)
-            return timestamp.replace("UTC", self.system_timezone, 1)
-        else:
-            return now.strftime(self.timestamp_format)
+            local = now.astimezone()
+            label = self._timezone_label_override or self._format_offset(local.utcoffset())
+            # A named fixed offset preserves local wall time and makes %Z reliable.
+            local = local.replace(tzinfo=timezone(local.utcoffset(), name=label))
+            return local.strftime(self.timestamp_format)
+        return now.strftime(self.timestamp_format)
+
+    @staticmethod
+    def _format_offset(offset):
+        minutes = int(offset.total_seconds() / 60)
+        hours, remainder = divmod(abs(minutes), 60)
+        sign = '-' if minutes < 0 else '+'
+        return f'UTC{sign}{hours:02d}:{remainder:02d}'
 
     def _get_system_timezone(self):
-        now = datetime.now()
-        offset = now.astimezone().strftime("%z")
-        hours = int(offset) // 100
-        minutes = int(offset) % 100
-        return f"UTC{hours:+03d}:{minutes:02d}"
+        return self._format_offset(datetime.now(timezone.utc).astimezone().utcoffset())
 
     def _get_formatted_exception(self):
         exception_info = traceback.format_exc()
@@ -121,47 +136,50 @@ class CustomLogger:
         stack_trace = traceback.format_stack()
         return "".join(stack_trace)
 
+    def _read_existing_log(self):
+        target = Path(self.log_file)
+        existing_content = target.read_text(encoding='utf-8').strip() if target.exists() else ''
+        # Preserve corrupt logs for diagnosis instead of silently discarding history.
+        if '<!DOCTYPE' in existing_content.upper():
+            raise ValueError('XML log document types are not supported.')
+        root = ET.fromstring(existing_content) if existing_content else ET.Element('log')
+        if root.tag != 'log':
+            raise ValueError('Existing XML log has an unexpected root element.')
+        return root
+
     def _write_to_log_file(self):
-        existing_content = ""
-        if os.path.exists(self.log_file):
-            with open(self.log_file, "r") as file:
-                existing_content = file.read().strip()
-
-        if existing_content:
-            try:
-                existing_tree = ET.ElementTree(ET.fromstring(existing_content))
-                existing_root = existing_tree.getroot()
-            except ET.ParseError:
-                existing_root = None
-        else:
-            existing_root = None
-
-        # Create a new XML root element if it doesn't exist
-        if existing_root is None:
-            existing_root = ET.Element("log")
-
-        #self.remove_spaces_from_xml(existing_root)
-
-        # Add the new log entries to the existing root element
+        target = Path(self.log_file)
+        existing_root = self._read_existing_log()
         for log_entry in self.xml_root:
             existing_root.append(log_entry)
 
-        # Write the XML log file with pretty printing
-        with open(self.log_file, "w") as file:
-            file.write(self._get_pretty_xml_string(existing_root))
+        content = self._get_pretty_xml_string(existing_root)
+        temporary = None
+        try:
+            with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8',
+                                             dir=target.parent, delete=False) as stream:
+                temporary = stream.name
+                stream.write(content)
+                stream.flush()
+                os.fsync(stream.fileno())
+            os.replace(temporary, target)
+        finally:
+            if temporary is not None and os.path.exists(temporary):
+                os.unlink(temporary)
 
     def _get_pretty_xml_string(self, element):
-        rough_string = ET.tostring(element, encoding="utf-8")
+        # Discard only formatting whitespace; leave message/traceback text intact.
+        for node in element.iter():
+            if len(node) and node.text and not node.text.strip():
+                node.text = None
+            if node.tail and not node.tail.strip():
+                node.tail = None
+        rough_string = ET.tostring(element, encoding='utf-8')
         parsed_xml = xml.dom.minidom.parseString(rough_string)
-
-        # Remove leading/trailing whitespace
-        pretty_xml = parsed_xml.toprettyxml(indent="", newl="").strip()
-        # Add a single new line after each element
-        #pretty_xml = re.sub(r">\s*<", "><", pretty_xml)
-        pretty_xml = parsed_xml.toprettyxml(indent="  ", newl="\n")
-
-        return pretty_xml
-
+        try:
+            return parsed_xml.toprettyxml(indent='  ', newl='\n')
+        finally:
+            parsed_xml.unlink()
 
     def remove_spaces_from_xml(self, xml_content):
         # Parse the XML content

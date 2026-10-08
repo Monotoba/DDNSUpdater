@@ -181,8 +181,8 @@ def main(argv=None):
         logger = CustomLogger(updater.log_file)
         logger.use_system_timezone(True)
         updater.logger = logger
-    except OSError:
-        print('Could not open log file; check its path and permissions.', file=sys.stderr)
+    except (OSError, ValueError, ET.ParseError, UnicodeError):
+        print('Could not open log file; check its path, permissions, and XML format.', file=sys.stderr)
         return 1
     try:
         external_ip = updater.get_external_ip_address()
