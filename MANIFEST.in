@@ -1,0 +1,3 @@
+include README.md USAGE.md LICENSE requirements.txt CONTRIBUTING.md CHANGELOG.md
+recursive-include tests *.py
+include scripts/check_wheel.py
