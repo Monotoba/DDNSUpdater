@@ -18,8 +18,8 @@ password; it must not make requests or create local state. Report sanitized
 errors and reproduction steps without passwords or password-bearing URLs.
 
 Provider, IPv4, timeout, state ordering, XML logging, and CLI integration now
-have offline tests. The next step is experimental-alpha preparation with clear
-limits. Controlled live validation remains necessary before stable or unattended
+have offline tests. Initial alpha metadata and release notes are prepared;
+GitHub publication is pending. Controlled live validation is needed before stable or unattended
 use is recommended. Do not send real provider requests from tests/CI.
 
 CI covers Python 3.10/3.12 on Linux, Windows, and macOS 15 Intel. The explicit
