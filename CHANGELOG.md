@@ -8,4 +8,8 @@
 - Remove request exception strings and provider bodies from CLI logs.
 - Add offline regression tests, six-job CI, and installed-wheel checks.
 - Add honest work-in-progress docs and BSD-2-Clause licensing.
-- Provider verification, timeouts, IP-state handling, and logger repairs pending.
+- Add HTTPS IPv4 discovery and connect/read timeouts with redirects disabled.
+- Encode provider parameters and verify XML success against the requested IPv4.
+- Save IP state atomically after provider confirmation; propagate save failures.
+- Keep runtime errors sanitized even when error logging fails.
+- Logger duplicate-entry repairs and live provider validation remain pending.

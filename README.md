@@ -10,8 +10,9 @@ record. Useful for a home server or another service whose public IP changes.
 
 **Work in progress — not ready for unattended use.** Installation, CLI settings,
 configuration files, and credential-safe error messages have an offline test
-baseline. Provider response verification, request timeouts, HTTPS IP discovery,
-IP-state ordering, and logger correctness still need repairs before release.
+baseline. HTTPS IPv4 discovery, connect/read timeouts, provider XML verification,
+and atomic state saving are implemented. Logger correctness still needs repairs
+before release.
 No live DNS update has been validated. PyPI publication remains on hold.
 
 ## Install from the checkout
@@ -43,19 +44,18 @@ issues or commit a credentials file. For file format and precedence, see
 [USAGE.md](USAGE.md).
 
 Omitting `--dry-run` runs the unfinished update flow and can change a DNS record.
-It currently treats HTTP success as completion without checking provider XML,
-stores IP state before the update, and has no request timeouts. Use the dry run
-while these release blockers are being repaired.
+The flow checks provider XML and saves state only after confirmed success.
+Use the dry run while remaining logger and live-validation work is completed.
 
 ## Cleanup steps
 
 1. **Implemented:** install metadata, command/module entry points, CLI/config
    precedence, defaults, required-setting checks, dry run, and offline tests/CI.
-2. **Next:** verify provider responses; validate IPv4 addresses; add HTTPS
-   discovery and timeouts; save IP state only after confirmed success.
-3. Fix logger duplicate entries and file errors with regression tests.
-4. Improve GitHub description/topics, validate built artifacts, and publish an
-   explicitly labeled alpha when the blockers are resolved.
+2. **Implemented:** verify provider responses; validate IPv4 addresses; add HTTPS
+   discovery and timeouts; atomically save state after confirmed success.
+3. **Next:** fix logger duplicate entries and file errors with regression tests.
+4. GitHub description/topics and baseline built-artifact checks are complete.
+   Publish an explicitly labeled alpha when the remaining blockers are resolved.
 
 Contributors can help with mocked provider responses and cross-platform checks.
 See [CONTRIBUTING.md](CONTRIBUTING.md). Licensed under [BSD-2-Clause](LICENSE).

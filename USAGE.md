@@ -48,15 +48,25 @@ configuration. Relative paths resolve from the current working directory.
 
 ## Exit behavior and limitations
 
-- Exit 0: dry-run settings are valid, or the current update flow returns HTTP
-  success. This does **not yet confirm provider-level DNS update success**.
+- Exit 0: dry-run settings are valid, or provider XML confirms the requested IPv4
+  update and the state file is saved. This does not verify DNS propagation.
 - Exit 2: invalid CLI/configuration.
-- Exit 1: runtime update failure or inability to open the log file.
+- Exit 1: discovery, provider, state-file, or logging failure. A state/log failure
+  can occur after DNS has changed; rerun after correcting the file problem.
 
 The updater does not run a scheduler or daemon. Unattended scheduling should wait
-for response validation, bounded requests, and reliable IP-state persistence.
-The current IP-file method logs write failures rather than propagating them;
-logger issues and this failure path are pending repairs.
+for logger repairs and live validation. Discovery uses `https://api4.ipify.org`;
+the provider receives the exact discovered IPv4 in an encoded HTTPS GET. Both
+requests disable redirects and use 5-second connect / 15-second read timeouts.
+These are Requests timeouts, not a total wall-clock deadline. IPv6 and malformed
+addresses are rejected. Provider XML must contain one `ErrCount` of `0`, one
+`Done` of `true`, and a matching `IP`; error entries and malformed XML fail.
+
+The state file retains the original `IP @ timestamp` format. It is replaced
+atomically only after provider confirmation; save failures propagate to exit 1.
+Its parent directory must already exist. This file is a success record, not a
+cache: each invocation sends an update. No automatic retries are performed.
+Logger duplicate-entry repairs remain pending. No live DNS update was validated.
 
 Only Requests is a third-party runtime dependency; argparse, configparser, and
 XML utilities are included with Python. No live update is needed to run tests.

@@ -17,8 +17,9 @@ The wheel check runs help and dry-run commands outside the checkout with a dummy
 password; it must not make requests or create local state. Report sanitized
 errors and reproduction steps without passwords or password-bearing URLs.
 
-The next priorities are provider verification, HTTPS/timeout/IP handling,
-state-file ordering, and duplicate-log repairs. No release is ready yet.
+The next priorities are duplicate-log repairs and controlled live validation.
+Provider, IPv4, timeout, and state-ordering behavior now has offline tests.
+No release is ready yet.
 
 CI covers Python 3.10/3.12 on Linux, Windows, and macOS 15 Intel. The explicit
 macOS label avoids the current ARM runner capacity delays; native ARM validation
