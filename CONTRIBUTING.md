@@ -18,9 +18,8 @@ password; it must not make requests or create local state. Report sanitized
 errors and reproduction steps without passwords or password-bearing URLs.
 
 Provider, IPv4, timeout, state ordering, XML logging, and CLI integration now
-have offline tests. Initial alpha metadata and release notes are prepared;
-GitHub publication is pending. Controlled live validation is needed before stable or unattended
-use is recommended. Do not send real provider requests from tests/CI.
+have offline tests. The [initial experimental alpha](https://github.com/Monotoba/DDNSUpdater/releases/tag/v0.1.0a1) is published.
+Controlled live validation is needed before stable or unattended use is recommended. Do not send real provider requests from tests/CI.
 
 CI covers Python 3.10/3.12 on Linux, Windows, and macOS 15 Intel. The explicit
 macOS label avoids the current ARM runner capacity delays; native ARM validation

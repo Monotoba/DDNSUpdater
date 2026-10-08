@@ -1,6 +1,7 @@
 # DDNSUpdater
 
 [![Tests](https://github.com/Monotoba/DDNSUpdater/actions/workflows/tests.yml/badge.svg)](https://github.com/Monotoba/DDNSUpdater/actions/workflows/tests.yml)
+[![Release](https://img.shields.io/github/v/release/Monotoba/DDNSUpdater?include_prereleases)](https://github.com/Monotoba/DDNSUpdater/releases/tag/v0.1.0a1)
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue)
 ![Status](https://img.shields.io/badge/status-experimental%20alpha-orange)
 [![License](https://img.shields.io/badge/license-BSD--2--Clause-blue)](LICENSE)
@@ -13,14 +14,13 @@ configuration files, and credential-safe error messages have an offline test
 baseline. HTTPS IPv4 discovery, connect/read timeouts, provider XML verification,
 and atomic state saving are implemented. XML logging writes each message once,
 preserves corrupt logs, and reports file failures.
-Version **0.1.0a1** is prepared for an initial GitHub prerelease; publication is
-pending. No live DNS update has been validated. PyPI publication remains on hold.
+Version **0.1.0a1** is available as a [GitHub prerelease](https://github.com/Monotoba/DDNSUpdater/releases/tag/v0.1.0a1). No live DNS update has been validated. PyPI publication remains on hold.
 See [RELEASE_NOTES.md](RELEASE_NOTES.md) for scope and known limitations.
 
-## Install the prepared alpha
+## Install the alpha
 
-Requires Python 3.10+. Create and activate a virtual environment. Once the
-GitHub prerelease is published, download its wheel and install it locally:
+Requires Python 3.10+. Create and activate a virtual environment, then download
+the wheel from the [GitHub prerelease](https://github.com/Monotoba/DDNSUpdater/releases/tag/v0.1.0a1) and install it locally:
 
 ```sh
 python -m pip install ./monotoba_ddnsupdater-0.1.0a1-py3-none-any.whl
@@ -67,9 +67,8 @@ validate real-service behavior before recommending unattended use.
 3. **Implemented:** repair logger duplicate entries, atomic file saving,
    malformed-log handling, and fractional-hour timezone formatting.
 4. GitHub description/topics and baseline built-artifact checks are complete.
-   The initial alpha version, release notes, and package checks are prepared.
-   GitHub publication is pending. Stable/unattended-use claims require a
-   controlled live provider check.
+   The initial experimental alpha is published with a wheel, source archive,
+   and checksums. Stable/unattended-use claims require a controlled live provider check.
 
 Contributors can help with mocked provider responses and cross-platform checks.
 See [CONTRIBUTING.md](CONTRIBUTING.md). Licensed under [BSD-2-Clause](LICENSE).
