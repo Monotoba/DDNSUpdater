@@ -59,7 +59,9 @@ def test_provider_receives_exact_discovered_ip_and_encoded_params(monkeypatch, u
     SUCCESS.replace('<Done>true</Done>', ''),
     SUCCESS.replace('<ErrCount>0</ErrCount>', '<ErrCount>0</ErrCount><ErrCount>0</ErrCount>'),
     '<!DOCTYPE interface-response>' + SUCCESS,
-    'x' * 65537])
+    'x' * 65537], ids=['html', 'invalid-xml', 'empty', 'provider-error',
+        'not-done', 'wrong-ip', 'upper-errors', 'lower-errors', 'missing-done',
+        'duplicate-count', 'doctype', 'oversized'])
 def test_provider_rejection_is_sanitized(monkeypatch, updater, body):
     monkeypatch.setattr(module.requests, 'get', Mock(return_value=response(body)))
     with pytest.raises(ValueError) as error:
