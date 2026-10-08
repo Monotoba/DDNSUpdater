@@ -1,6 +1,6 @@
 # DDNSUpdater v0.1.0a1 — experimental alpha
 
-Prepared release notes. GitHub publication is pending; PyPI publication is on hold.
+[Published on GitHub](https://github.com/Monotoba/DDNSUpdater/releases/tag/v0.1.0a1) on 2026-10-08. PyPI publication is on hold.
 
 A Python 3.10+ command-line tool for updating a Namecheap dynamic-DNS IPv4 record.
 This initial alpha is intended for evaluation and contributor feedback. It is
@@ -20,7 +20,7 @@ propagation check has been performed for this release.
 
 ## Install and evaluate
 
-Once published, download the wheel from this GitHub prerelease, activate a
+Download the wheel from the [GitHub prerelease](https://github.com/Monotoba/DDNSUpdater/releases/tag/v0.1.0a1), activate a
 Python 3.10+ virtual environment, and run:
 
 ```sh

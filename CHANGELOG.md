@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0a1 — prepared, unreleased
+## 0.1.0a1 — 2026-10-08
 
 - Add Python 3.10+ packaging, runtime dependencies, and installed CLI entry point.
 - Repair package imports while retaining the original direct-script launch.
@@ -20,4 +20,5 @@
 - Correct negative fractional-hour offsets and refresh local offsets per entry.
 - Cover real-logger CLI integration with mocked provider responses.
 - Prepare initial experimental-alpha metadata and release notes.
-- Live provider validation remains pending; no release has been published.
+- Publish the initial GitHub experimental alpha with wheel, source archive, and checksums.
+- Live provider validation remains pending; PyPI publication remains on hold.
