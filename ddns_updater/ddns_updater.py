@@ -14,6 +14,10 @@ import argparse
 import configparser
 import datetime
 import os
+import ipaddress
+import tempfile
+from pathlib import Path
+import xml.etree.ElementTree as ET
 import sys
 
 import requests
@@ -78,58 +82,68 @@ class DDNSUpdater:
         if self.domain == 'example.com' or self.api_password == '1234567890':
             raise ValueError('Replace example domain/password values before updating.')
 
-    def get_external_ip_address(self):
-        """
-        Retrieves the external IP address.
-
-        Returns:
-            str: The external IP address.
-
-        Raises:
-            requests.exceptions.RequestException: If there is an error retrieving the IP address.
-        """
+    @staticmethod
+    def validate_ipv4(value):
+        """Require an IPv4 address before sending it to the provider."""
         try:
-            response = requests.get("http://ipecho.net/plain")
-            response.raise_for_status()
-            return response.text.strip()
-        except requests.exceptions.RequestException:
-            self.logger.error("Failed to retrieve external IP address.")
-            raise
+            return str(ipaddress.IPv4Address(value.strip()))
+        except (ValueError, AttributeError):
+            raise ValueError('Invalid IPv4 address.') from None
+
+    def get_external_ip_address(self):
+        """Discover IPv4 over HTTPS with connect/read timeouts."""
+        response = requests.get('https://api4.ipify.org', timeout=(5, 15),
+                                allow_redirects=False)
+        if response.status_code != 200:
+            raise ValueError('IP discovery did not return HTTP 200.')
+        return self.validate_ipv4(response.text)
 
     def store_last_ip(self, ip_address):
-        """
-        Stores the last IP address in a file.
-
-        Args:
-            ip_address (str): The IP address to store.
-        """
+        """Atomically replace state after a confirmed provider update."""
+        ip_address = self.validate_ipv4(ip_address)
         now = datetime.datetime.now().strftime('%m/%d/%Y - %H:%M:%S')
-        line = f"{ip_address} @ {now}\n"
+        target = Path(self.ip_file)
+        temporary = None
         try:
-            with open(self.ip_file, 'w') as file:
-                file.write(line)
-        except IOError as e:
-            self.logger.error(f"Failed to store last IP address: {str(e)}")
+            with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8',
+                                             dir=target.parent, delete=False) as stream:
+                temporary = stream.name
+                stream.write(f'{ip_address} @ {now}\n')
+                stream.flush()
+                os.fsync(stream.fileno())
+            os.replace(temporary, target)
+        finally:
+            if temporary is not None and os.path.exists(temporary):
+                os.unlink(temporary)
 
-    def update_ddns(self):
-        """
-        Updates the DDNS.
-
-        Returns:
-            str: The response from the DDNS update.
-
-        Raises:
-            requests.exceptions.RequestException: If there is an error updating the DDNS.
-        """
+    def update_ddns(self, ip_address=None):
+        """Send an encoded HTTPS GET and require an explicit XML success."""
         self.validate_configuration()
-        url = f"https://dynamicdns.park-your-domain.com/update?host={self.host}&domain={self.domain}&password={self.api_password}"
+        if ip_address is None:
+            ip_address = self.get_external_ip_address()
+        ip_address = self.validate_ipv4(ip_address)
+        response = requests.get(
+            'https://dynamicdns.park-your-domain.com/update',
+            params={'host': self.host, 'domain': self.domain,
+                    'password': self.api_password, 'ip': ip_address},
+            timeout=(5, 15), allow_redirects=False)
+        if response.status_code != 200:
+            raise ValueError('Provider did not return HTTP 200.')
+        # Do not reflect provider text: it can contain credentials or HTML errors.
+        if len(response.content) > 65536 or '<!DOCTYPE' in response.text.upper():
+            raise ValueError('Invalid provider response.')
         try:
-            response = requests.get(url)
-            response.raise_for_status()
-            return response.text.strip()
-        except requests.exceptions.RequestException:
-            self.logger.error("Failed to update DDNS.")
-            raise
+            root = ET.fromstring(response.text)
+        except ET.ParseError:
+            raise ValueError('Invalid provider XML.') from None
+        def field(name):
+            nodes = root.findall(name)
+            return nodes[0].text.strip() if len(nodes) == 1 and nodes[0].text else None
+        if (root.tag != 'interface-response' or field('ErrCount') != '0'
+                or field('Done') != 'true' or field('IP') != ip_address
+                or root.findall('./Errors/*') or root.findall('./errors/*')):
+            raise ValueError('Provider did not confirm the requested IPv4 update.')
+        return response.text.strip()
 
 
 def main(argv=None):
@@ -172,13 +186,19 @@ def main(argv=None):
         return 1
     try:
         external_ip = updater.get_external_ip_address()
+        updater.update_ddns(external_ip)
         updater.store_last_ip(external_ip)
-        updater.update_ddns()
-        logger.info('DDNS request returned HTTP success; provider response is not yet validated.')
+        logger.info('Provider confirmed the IPv4 update; IP state saved.')
         return 0
     except Exception:
         # Request exception strings can include the password-bearing URL.
-        logger.error('DDNS update failed. Check configuration, connectivity, and file permissions.')
+        message = 'DDNS update or state saving failed. Check configuration, connectivity, and file permissions.'
+        print(message, file=sys.stderr)
+        try:
+            logger.error(message)
+        except Exception:
+            # Logging must not leak a chained password-bearing request exception.
+            pass
         return 1
 
 
